@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/location.dart';
+import '../models/weather_data.dart';
+import 'cache_service.dart';
 
 class OpenMeteoService {
   static const String _geocodingBase = 'https://geocoding-api.open-meteo.com/v1';
@@ -31,11 +33,19 @@ class OpenMeteoService {
         .toList();
   }
 
-  static Future<Map<String, dynamic>> fetchHourlyForecast(
+  static Future<WeatherForecast> fetchHourlyForecast(
     double latitude,
     double longitude, {
     int days = 5,
+    bool useCache = true,
   }) async {
+    if (useCache) {
+      final cached = await CacheService.getCachedWeather(latitude, longitude);
+      if (cached != null && !CacheService.isCacheStale(cached.fetchedAt)) {
+        return cached;
+      }
+    }
+
     final uri = Uri.parse(
       '$_forecastBase/forecast?latitude=$latitude&longitude=$longitude'
       '&hourly=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
@@ -47,6 +57,9 @@ class OpenMeteoService {
       throw Exception('Forecast error: ${response.statusCode}');
     }
 
-    return jsonDecode(response.body) as Map<String, dynamic>;
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final forecast = WeatherForecast.fromResponse(data);
+    await CacheService.cacheWeather(forecast);
+    return forecast;
   }
 }
