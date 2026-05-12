@@ -1,3 +1,4 @@
+import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
@@ -8,10 +9,50 @@ import '../../providers/theme_provider.dart';
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
+  static const List<FlexScheme> _schemes = [
+    FlexScheme.green,
+    FlexScheme.blue,
+    FlexScheme.red,
+    FlexScheme.amber,
+    FlexScheme.deepPurple,
+    FlexScheme.espresso,
+    FlexScheme.sakura,
+    FlexScheme.mango,
+    FlexScheme.greyLaw,
+    FlexScheme.deepBlue,
+  ];
+
+  String _schemeLabel(FlexScheme scheme) {
+    switch (scheme) {
+      case FlexScheme.green:
+        return 'Green';
+      case FlexScheme.blue:
+        return 'Blue';
+      case FlexScheme.red:
+        return 'Red';
+      case FlexScheme.amber:
+        return 'Amber';
+      case FlexScheme.deepPurple:
+        return 'Deep Purple';
+      case FlexScheme.espresso:
+        return 'Espresso';
+      case FlexScheme.sakura:
+        return 'Sakura';
+      case FlexScheme.mango:
+        return 'Mango';
+      case FlexScheme.greyLaw:
+        return 'Grey';
+      case FlexScheme.deepBlue:
+        return 'Deep Blue';
+      default:
+        return scheme.name;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final themeMode = ref.watch(themeProvider);
+    final theme = ref.watch(themeProvider);
     final locale = ref.watch(localeProvider);
 
     return Scaffold(
@@ -22,9 +63,49 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           ListTile(
             title: Text(l10n.theme),
-            subtitle: Text(_themeLabel(context, themeMode)),
             leading: const Icon(Icons.palette_outlined),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: InputDecorator(
+              decoration: InputDecoration(
+                labelText: l10n.theme,
+                border: const OutlineInputBorder(),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<FlexScheme>(
+                  value: theme.scheme,
+                  isDense: true,
+                  isExpanded: true,
+                  items: _schemes.map((scheme) {
+                    return DropdownMenuItem(
+                      value: scheme,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: FlexThemeData.light(scheme: scheme).colorScheme.primary,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(_schemeLabel(scheme)),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      ref.read(themeProvider.notifier).setScheme(value);
+                    }
+                  },
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: SegmentedButton<ThemeMode>(
@@ -45,9 +126,9 @@ class SettingsScreen extends ConsumerWidget {
                   icon: const Icon(Icons.settings_suggest),
                 ),
               ],
-              selected: {themeMode},
+              selected: {theme.mode},
               onSelectionChanged: (Set<ThemeMode> newSelection) {
-                ref.read(themeProvider.notifier).setTheme(newSelection.first);
+                ref.read(themeProvider.notifier).setMode(newSelection.first);
               },
             ),
           ),
@@ -85,17 +166,5 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _themeLabel(BuildContext context, ThemeMode mode) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (mode) {
-      case ThemeMode.light:
-        return l10n.light;
-      case ThemeMode.dark:
-        return l10n.dark;
-      case ThemeMode.system:
-        return l10n.system;
-    }
   }
 }

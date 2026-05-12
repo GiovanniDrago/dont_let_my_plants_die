@@ -15,7 +15,7 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
+    final theme = ref.watch(themeProvider);
     final locale = ref.watch(localeProvider);
 
     return MaterialApp(
@@ -33,14 +33,14 @@ class MyApp extends ConsumerWidget {
       ],
       locale: locale,
       theme: FlexThemeData.light(
-        scheme: FlexScheme.green,
+        scheme: theme.scheme,
         useMaterial3: true,
       ),
       darkTheme: FlexThemeData.dark(
-        scheme: FlexScheme.green,
+        scheme: theme.scheme,
         useMaterial3: true,
       ),
-      themeMode: themeMode,
+      themeMode: theme.mode,
       home: FutureBuilder<bool>(
         future: CacheService.hasMainLocation(),
         builder: (context, snapshot) {

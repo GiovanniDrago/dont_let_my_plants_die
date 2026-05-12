@@ -21,9 +21,9 @@ class MainScreen extends ConsumerWidget {
       body: IndexedStack(
         index: currentIndex,
         children: const [
+          AlarmsScreen(),
           HomeScreen(),
           MapScreen(),
-          AlarmsScreen(),
           SettingsScreen(),
         ],
       ),
@@ -34,19 +34,19 @@ class MainScreen extends ConsumerWidget {
         },
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
+            icon: const Icon(Icons.alarm_outlined),
+            selectedIcon: const Icon(Icons.alarm),
+            label: l10n.alarms,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.wb_sunny_outlined),
+            selectedIcon: const Icon(Icons.wb_sunny),
             label: l10n.home,
           ),
           NavigationDestination(
             icon: const Icon(Icons.map_outlined),
             selectedIcon: const Icon(Icons.map),
             label: l10n.map,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.alarm_outlined),
-            selectedIcon: const Icon(Icons.alarm),
-            label: l10n.alarms,
           ),
           NavigationDestination(
             icon: const Icon(Icons.settings_outlined),

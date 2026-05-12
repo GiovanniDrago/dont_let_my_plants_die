@@ -12,7 +12,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Don\'t Let My Plants Die';
 
   @override
-  String get home => 'Home';
+  String get home => 'Weather';
 
   @override
   String get map => 'Map';

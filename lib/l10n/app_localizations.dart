@@ -104,10 +104,10 @@ abstract class AppLocalizations {
   /// **'Don\'t Let My Plants Die'**
   String get appTitle;
 
-  /// Home tab label
+  /// Weather tab label
   ///
   /// In en, this message translates to:
-  /// **'Home'**
+  /// **'Weather'**
   String get home;
 
   /// Map tab label

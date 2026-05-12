@@ -23,6 +23,7 @@ class MapScreen extends ConsumerStatefulWidget {
 class _MapScreenState extends ConsumerState<MapScreen> {
   final MapController _mapController = MapController();
   final List<LatLng> _points = [];
+  bool _isDrawingMode = false;
   bool _isClosed = false;
   bool _isLoadingWeather = false;
   WeatherForecast? _areaWeather;
@@ -43,18 +44,50 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   }
 
   void _onMapTap(TapPosition _, LatLng latLng) {
-    if (_isClosed) return;
+    if (!_isDrawingMode || _isClosed) return;
     setState(() {
       _points.add(latLng);
     });
   }
 
-  void _onFirstDotTap() {
-    if (_points.length < 3) return;
+  void _startDrawing() {
+    setState(() {
+      _isDrawingMode = true;
+      _points.clear();
+      _isClosed = false;
+      _areaWeather = null;
+      _currentArea = null;
+    });
+  }
+
+  void _autoClose() {
+    if (_points.length < 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.drawArea),
+        ),
+      );
+      return;
+    }
     setState(() {
       _isClosed = true;
+      _isDrawingMode = false;
     });
     _fetchAreaWeather();
+  }
+
+  void _resetNorth() {
+    _mapController.rotate(0);
+  }
+
+  void _clearDrawing() {
+    setState(() {
+      _points.clear();
+      _isDrawingMode = false;
+      _isClosed = false;
+      _areaWeather = null;
+      _currentArea = null;
+    });
   }
 
   Future<void> _fetchAreaWeather() async {
@@ -148,20 +181,12 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     }
   }
 
-  void _clearDrawing() {
-    setState(() {
-      _points.clear();
-      _isClosed = false;
-      _areaWeather = null;
-      _currentArea = null;
-    });
-  }
-
   void _loadArea(MapArea area) {
     setState(() {
       _points.clear();
       _points.addAll(area.points);
       _isClosed = true;
+      _isDrawingMode = false;
       _currentArea = area;
     });
     _fetchAreaWeather();
@@ -188,80 +213,167 @@ class _MapScreenState extends ConsumerState<MapScreen> {
         children: [
           Expanded(
             flex: _isClosed && _areaWeather != null ? 1 : 2,
-            child: FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: const LatLng(50.0, 10.0),
-                initialZoom: 4.0,
-                onTap: _onMapTap,
-              ),
+            child: Stack(
               children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.example.dont_let_my_plants_die',
-                ),
-                if (_points.isNotEmpty)
-                  MarkerLayer(
-                    markers: _points.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final point = entry.value;
-                      final isFirst = index == 0;
-                      return Marker(
-                        point: point,
-                        width: isFirst ? 40 : 24,
-                        height: isFirst ? 40 : 24,
-                        child: GestureDetector(
-                          onTap: isFirst && _points.length > 2 && !_isClosed
-                              ? _onFirstDotTap
-                              : null,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: isFirst
-                                  ? Colors.red
-                                  : Theme.of(context).colorScheme.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 2),
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: const LatLng(50.0, 10.0),
+                    initialZoom: 4.0,
+                    interactionOptions: const InteractionOptions(
+                      flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                    ),
+                    onTap: _onMapTap,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'com.example.dont_let_my_plants_die',
+                    ),
+                    if (_points.isNotEmpty)
+                      MarkerLayer(
+                        markers: _points.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final point = entry.value;
+                          final isFirst = index == 0;
+                          return Marker(
+                            point: point,
+                            width: isFirst ? 48 : 24,
+                            height: isFirst ? 48 : 24,
+                            child: GestureDetector(
+                              onTap: isFirst && _points.length > 2 && !_isClosed
+                                  ? () {
+                                      setState(() {
+                                        _isClosed = true;
+                                        _isDrawingMode = false;
+                                      });
+                                      _fetchAreaWeather();
+                                    }
+                                  : null,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: isFirst
+                                      ? Colors.red
+                                      : Theme.of(context).colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white, width: 3),
+                                  boxShadow: isFirst && !_isClosed
+                                      ? [
+                                          BoxShadow(
+                                            color: Colors.red.withValues(alpha: 0.4),
+                                            blurRadius: 8,
+                                            spreadRadius: 2,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: isFirst && !_isClosed
+                                    ? const Icon(Icons.close, color: Colors.white, size: 24)
+                                    : null,
+                              ),
                             ),
-                            child: isFirst && !_isClosed
-                                ? const Icon(Icons.close, color: Colors.white, size: 20)
-                                : null,
+                          );
+                        }).toList(),
+                      ),
+                    if (_points.length > 1)
+                      PolylineLayer(
+                        polylines: [
+                          Polyline(
+                            points: _isClosed ? [..._points, _points.first] : _points,
+                            color: Theme.of(context).colorScheme.primary,
+                            strokeWidth: 3,
+                          ),
+                        ],
+                      ),
+                    if (_isClosed)
+                      PolygonLayer(
+                        polygons: [
+                          Polygon(
+                            points: _points,
+                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                            borderColor: Theme.of(context).colorScheme.primary,
+                            borderStrokeWidth: 2,
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                // Floating action buttons overlaid on the map
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FloatingActionButton.small(
+                        heroTag: 'north',
+                        onPressed: _resetNorth,
+                        tooltip: 'Reset to North',
+                        child: const Icon(Icons.explore),
+                      ),
+                      const SizedBox(height: 8),
+                      if (!_isDrawingMode && !_isClosed)
+                        FloatingActionButton.small(
+                          heroTag: 'draw',
+                          onPressed: _startDrawing,
+                          tooltip: l10n.drawArea,
+                          child: const Icon(Icons.edit),
+                        ),
+                      if (_isDrawingMode && !_isClosed) ...[
+                        FloatingActionButton.small(
+                          heroTag: 'autoclose',
+                          onPressed: _autoClose,
+                          tooltip: l10n.closeArea,
+                          child: const Icon(Icons.check),
+                        ),
+                        const SizedBox(height: 8),
+                        FloatingActionButton.small(
+                          heroTag: 'canceldraw',
+                          onPressed: _clearDrawing,
+                          tooltip: l10n.cancel,
+                          child: const Icon(Icons.close),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (_isDrawingMode && _points.isEmpty)
+                  Positioned(
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Chip(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        label: Text(
+                          l10n.drawArea,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                if (_points.length > 1)
-                  PolylineLayer(
-                    polylines: [
-                      Polyline(
-                        points: _isClosed ? [..._points, _points.first] : _points,
-                        color: Theme.of(context).colorScheme.primary,
-                        strokeWidth: 3,
                       ),
-                    ],
+                    ),
                   ),
-                if (_isClosed)
-                  PolygonLayer(
-                    polygons: [
-                      Polygon(
-                        points: _points,
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                        borderColor: Theme.of(context).colorScheme.primary,
-                        borderStrokeWidth: 2,
+                if (_isDrawingMode && _points.isNotEmpty && !_isClosed)
+                  Positioned(
+                    bottom: 16,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Chip(
+                        backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+                        label: Text(
+                          l10n.closeArea,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onTertiaryContainer,
+                          ),
+                        ),
                       ),
-                    ],
+                    ),
                   ),
               ],
             ),
           ),
-          if (_points.isNotEmpty && !_isClosed)
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                l10n.closeArea,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
           if (_isClosed)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

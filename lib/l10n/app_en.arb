@@ -3,8 +3,8 @@
   "@appTitle": {
     "description": "Application title"
   },
-  "home": "Home",
-  "@home": {"description": "Home tab label"},
+  "home": "Weather",
+  "@home": {"description": "Weather tab label"},
   "map": "Map",
   "@map": {"description": "Map tab label"},
   "alarms": "Alarms",

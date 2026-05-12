@@ -58,10 +58,18 @@ class _LocationSearchFieldState extends State<LocationSearchField> {
         final l10n = AppLocalizations.of(context)!;
         final lang = l10n.localeName;
         final results = await OpenMeteoService.searchLocation(query, lang);
+        // Deduplicate by unique key, keeping first occurrence
+        final seen = <String>{};
+        final deduped = <AppLocation>[];
+        for (final loc in results) {
+          if (seen.add(loc.uniqueKey)) {
+            deduped.add(loc);
+          }
+        }
         if (mounted) {
           setState(() {
-            _suggestions = results;
-            _notFound = results.isEmpty;
+            _suggestions = deduped;
+            _notFound = deduped.isEmpty;
             _isLoading = false;
           });
         }
@@ -150,6 +158,12 @@ class _LocationSearchFieldState extends State<LocationSearchField> {
                 return ListTile(
                   dense: true,
                   title: Text(loc.displayName),
+                  subtitle: loc.detailLabel != loc.displayName
+                      ? Text(
+                          loc.detailLabel.substring(loc.displayName.length).trimLeft().replaceFirst('• ', ''),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        )
+                      : null,
                   leading: const Icon(Icons.location_on_outlined),
                   onTap: () => _selectLocation(loc),
                 );
