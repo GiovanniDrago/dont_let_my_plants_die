@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../models/alarm.dart';
 import '../models/map_area.dart';
 import '../models/weather_data.dart';
 
@@ -79,5 +80,24 @@ class CacheService {
     final areas = await getSavedAreas();
     areas.removeWhere((a) => a.id == id);
     await areasBox.put('saved_areas', areas.map((a) => a.toJson()).toList());
+  }
+
+  // Alarms
+  static Future<List<Alarm>> getAlarms() async {
+    final List<dynamic> data = alarmsBox.get('alarms') ?? [];
+    return data.map((e) => Alarm.fromJson(Map<String, dynamic>.from(e))).toList();
+  }
+
+  static Future<void> saveAlarm(Alarm alarm) async {
+    final alarms = await getAlarms();
+    alarms.removeWhere((a) => a.id == alarm.id);
+    alarms.add(alarm);
+    await alarmsBox.put('alarms', alarms.map((a) => a.toJson()).toList());
+  }
+
+  static Future<void> deleteAlarm(String id) async {
+    final alarms = await getAlarms();
+    alarms.removeWhere((a) => a.id == id);
+    await alarmsBox.put('alarms', alarms.map((a) => a.toJson()).toList());
   }
 }
