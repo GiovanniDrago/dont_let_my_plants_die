@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'l10n/app_localizations.dart';
 
+import 'l10n/app_localizations.dart';
 import 'providers/locale_provider.dart';
 import 'providers/theme_provider.dart';
+import 'screens/main/main_screen.dart';
 import 'screens/onboarding/location_setup_screen.dart';
 import 'services/cache_service.dart';
 
@@ -52,10 +53,7 @@ class MyApp extends ConsumerWidget {
           if (!hasLocation) {
             return const LocationSetupScreen();
           }
-          // Will be replaced with main navigation in Phase 1h
-          return const Scaffold(
-            body: Center(child: Text('Main screen placeholder')),
-          );
+          return const MainScreen();
         },
       ),
     );

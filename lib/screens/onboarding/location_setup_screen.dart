@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/location.dart';
 import '../../services/cache_service.dart';
 import '../../widgets/location_search_field.dart';
+import '../main/main_screen.dart';
 
 class LocationSetupScreen extends ConsumerStatefulWidget {
   const LocationSetupScreen({super.key});
@@ -20,9 +21,8 @@ class _LocationSetupScreenState extends ConsumerState<LocationSetupScreen> {
     if (_selectedLocation == null) return;
     await CacheService.setMainLocation(_selectedLocation!.toJson());
     if (mounted) {
-      // Navigate to main app — replaced in Phase 1h
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const Scaffold(body: Center(child: Text('Main screen placeholder')))),
+        MaterialPageRoute(builder: (_) => const MainScreen()),
       );
     }
   }
