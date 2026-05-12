@@ -2,7 +2,7 @@ name: dont_let_my_plants_die
 description: "Weather forecast and alarm app for plant care."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 0.0.0
 
 environment:
   sdk: ^3.11.4
