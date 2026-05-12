@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 
+import '../models/map_area.dart';
 import '../models/weather_data.dart';
 
 class CacheService {
@@ -59,5 +60,24 @@ class CacheService {
 
   static bool isCacheStale(DateTime fetchedAt, {Duration maxAge = const Duration(hours: 3)}) {
     return DateTime.now().difference(fetchedAt) > maxAge;
+  }
+
+  // Map Areas
+  static Future<List<MapArea>> getSavedAreas() async {
+    final List<dynamic> data = areasBox.get('saved_areas') ?? [];
+    return data.map((e) => MapArea.fromJson(Map<String, dynamic>.from(e))).toList();
+  }
+
+  static Future<void> saveArea(MapArea area) async {
+    final areas = await getSavedAreas();
+    areas.removeWhere((a) => a.id == area.id);
+    areas.add(area);
+    await areasBox.put('saved_areas', areas.map((a) => a.toJson()).toList());
+  }
+
+  static Future<void> deleteArea(String id) async {
+    final areas = await getSavedAreas();
+    areas.removeWhere((a) => a.id == id);
+    await areasBox.put('saved_areas', areas.map((a) => a.toJson()).toList());
   }
 }
