@@ -35,6 +35,8 @@
   "@temperature": {"description": "Temperature label"},
   "wind": "Wind",
   "@wind": {"description": "Wind label"},
+  "windSpeed": "Wind speed",
+  "@windSpeed": {"description": "Wind speed label"},
   "humidity": "Humidity",
   "@humidity": {"description": "Humidity label"},
   "weatherCondition": "Condition",

@@ -16,6 +16,7 @@
   "add": "Aggiungi",
   "temperature": "Temperatura",
   "wind": "Vento",
+  "windSpeed": "Velocità vento",
   "humidity": "Umidità",
   "weatherCondition": "Condizione",
   "today": "Oggi",

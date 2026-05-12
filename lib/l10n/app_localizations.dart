@@ -200,6 +200,12 @@ abstract class AppLocalizations {
   /// **'Wind'**
   String get wind;
 
+  /// Wind speed label
+  ///
+  /// In en, this message translates to:
+  /// **'Wind speed'**
+  String get windSpeed;
+
   /// Humidity label
   ///
   /// In en, this message translates to:

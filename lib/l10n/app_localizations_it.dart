@@ -61,6 +61,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get wind => 'Vento';
 
   @override
+  String get windSpeed => 'Velocità vento';
+
+  @override
   String get humidity => 'Umidità';
 
   @override

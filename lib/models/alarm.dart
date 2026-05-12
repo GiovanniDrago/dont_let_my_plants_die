@@ -5,21 +5,23 @@ class Alarm {
   final String title;
   final String description;
   final AppLocation location;
-  final String weatherCondition; // e.g., 'sunny', 'rainy', 'cloudy', etc.
-  final double? temperature; // nullable
+  final List<String> weatherConditions; // e.g., ['sunny', 'cloudy']
+  final double? temperature;
+  final double? windSpeed;
   final int noticePeriodHours;
   final bool enabled;
   final DateTime? lastTriggeredAt;
   final DateTime? lastResetAt;
-  final String? areaId; // links to a saved MapArea if alarm was created from an area
+  final String? areaId;
 
   Alarm({
     required this.id,
     required this.title,
     required this.description,
     required this.location,
-    required this.weatherCondition,
+    required this.weatherConditions,
     this.temperature,
+    this.windSpeed,
     required this.noticePeriodHours,
     this.enabled = true,
     this.lastTriggeredAt,
@@ -28,13 +30,25 @@ class Alarm {
   });
 
   factory Alarm.fromJson(Map<String, dynamic> json) {
+    // Backward compatibility: old alarms stored weatherCondition as String
+    List<String> conditions;
+    final raw = json['weatherConditions'] ?? json['weatherCondition'];
+    if (raw is String) {
+      conditions = [raw];
+    } else if (raw is List) {
+      conditions = raw.cast<String>();
+    } else {
+      conditions = [];
+    }
+
     return Alarm(
       id: json['id'] as String,
       title: json['title'] as String,
       description: json['description'] as String,
       location: AppLocation.fromJson(Map<String, dynamic>.from(json['location'])),
-      weatherCondition: json['weatherCondition'] as String,
+      weatherConditions: conditions,
       temperature: json['temperature'] != null ? (json['temperature'] as num).toDouble() : null,
+      windSpeed: json['windSpeed'] != null ? (json['windSpeed'] as num).toDouble() : null,
       noticePeriodHours: json['noticePeriodHours'] as int,
       enabled: json['enabled'] as bool? ?? true,
       lastTriggeredAt: json['lastTriggeredAt'] != null
@@ -53,8 +67,9 @@ class Alarm {
       'title': title,
       'description': description,
       'location': location.toJson(),
-      'weatherCondition': weatherCondition,
+      'weatherConditions': weatherConditions,
       'temperature': temperature,
+      'windSpeed': windSpeed,
       'noticePeriodHours': noticePeriodHours,
       'enabled': enabled,
       'lastTriggeredAt': lastTriggeredAt?.toIso8601String(),
@@ -68,9 +83,11 @@ class Alarm {
     String? title,
     String? description,
     AppLocation? location,
-    String? weatherCondition,
+    List<String>? weatherConditions,
     double? temperature,
     bool? clearTemperature,
+    double? windSpeed,
+    bool? clearWindSpeed,
     int? noticePeriodHours,
     bool? enabled,
     DateTime? lastTriggeredAt,
@@ -85,8 +102,9 @@ class Alarm {
       title: title ?? this.title,
       description: description ?? this.description,
       location: location ?? this.location,
-      weatherCondition: weatherCondition ?? this.weatherCondition,
+      weatherConditions: weatherConditions ?? this.weatherConditions,
       temperature: clearTemperature == true ? null : (temperature ?? this.temperature),
+      windSpeed: clearWindSpeed == true ? null : (windSpeed ?? this.windSpeed),
       noticePeriodHours: noticePeriodHours ?? this.noticePeriodHours,
       enabled: enabled ?? this.enabled,
       lastTriggeredAt: clearLastTriggeredAt == true

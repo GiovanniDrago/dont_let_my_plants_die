@@ -57,10 +57,22 @@ class AlarmListTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final (_, conditionText) = WeatherConditionHelper.getWeatherInfo(
-      context,
-      _weatherCodeFromCondition(alarm.weatherCondition),
-    );
+
+    final conditionTexts = alarm.weatherConditions.map((c) {
+      final (_, text) = WeatherConditionHelper.getWeatherInfo(
+        context,
+        _weatherCodeFromCondition(c),
+      );
+      return text;
+    }).join(', ');
+
+    final extraParts = <String>[];
+    if (alarm.temperature != null) {
+      extraParts.add('≥${alarm.temperature!.round()}${l10n.celsius}');
+    }
+    if (alarm.windSpeed != null) {
+      extraParts.add('≥${alarm.windSpeed!.round()}${l10n.kmH}');
+    }
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -73,9 +85,9 @@ class AlarmListTile extends ConsumerWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${alarm.location.name} • $conditionText'),
-            if (alarm.temperature != null)
-              Text('${alarm.temperature!.round()}${l10n.celsius} • ${alarm.noticePeriodHours}${l10n.hours} ${l10n.beforeTheEvent}'),
+            Text('${alarm.location.name} • $conditionTexts'),
+            if (extraParts.isNotEmpty)
+              Text(extraParts.join(' • ')),
           ],
         ),
         trailing: const Icon(Icons.chevron_right),
@@ -91,28 +103,17 @@ class AlarmListTile extends ConsumerWidget {
 
   int _weatherCodeFromCondition(String condition) {
     switch (condition) {
-      case 'sunny':
-        return 0;
-      case 'partlyCloudy':
-        return 2;
-      case 'cloudy':
-        return 3;
-      case 'foggy':
-        return 45;
-      case 'rainy':
-        return 61;
-      case 'snowy':
-        return 71;
-      case 'stormy':
-        return 95;
-      case 'windy':
-        return 0; // no specific code
-      case 'hail':
-        return 96;
-      case 'thunderstorm':
-        return 95;
-      default:
-        return 0;
+      case 'sunny': return 0;
+      case 'partlyCloudy': return 2;
+      case 'cloudy': return 3;
+      case 'foggy': return 45;
+      case 'rainy': return 61;
+      case 'snowy': return 71;
+      case 'stormy': return 95;
+      case 'windy': return 0;
+      case 'hail': return 96;
+      case 'thunderstorm': return 95;
+      default: return 0;
     }
   }
 }

@@ -49,13 +49,15 @@ Future<void> _evaluateAlarms() async {
       );
 
       final matchingPeriods = _findMatchingPeriods(alarm, forecast);
+
       if (matchingPeriods.isEmpty) {
         // Condition not met — check if we should reset
         if (alarm.lastTriggeredAt != null) {
-          final resetDuration = const Duration(hours: 2);
           final lastMatch = _findLastMatchingTime(alarm, forecast);
-          if (lastMatch == null ||
-              DateTime.now().difference(lastMatch) > resetDuration) {
+          final shouldReset = lastMatch == null ||
+              _isNewDay(alarm.lastTriggeredAt!) ||
+              DateTime.now().difference(lastMatch) > const Duration(hours: 2);
+          if (shouldReset) {
             final resetAlarm = alarm.copyWith(
               clearLastTriggeredAt: true,
               lastResetAt: DateTime.now(),
@@ -75,6 +77,8 @@ Future<void> _evaluateAlarms() async {
         continue;
       }
 
+      final conditionsText = alarm.weatherConditions.join(', ');
+
       // Schedule notice notification
       final noticeTime = firstMatch.subtract(
         Duration(hours: alarm.noticePeriodHours),
@@ -84,7 +88,7 @@ Future<void> _evaluateAlarms() async {
           id: '${alarm.id}_notice'.hashCode,
           title: 'Alarm notice: ${alarm.title}',
           body:
-              '${alarm.weatherCondition} expected in ${alarm.location.name} at ${firstMatch.hour}:00',
+              '$conditionsText expected in ${alarm.location.name} at ${firstMatch.hour}:00',
           scheduledDate: noticeTime,
         );
       }
@@ -95,7 +99,7 @@ Future<void> _evaluateAlarms() async {
           id: '${alarm.id}_now'.hashCode,
           title: 'Alarm: ${alarm.title}',
           body:
-              '${alarm.weatherCondition} is now occurring in ${alarm.location.name}',
+              '$conditionsText is now occurring in ${alarm.location.name}',
           scheduledDate: firstMatch,
         );
       } else {
@@ -104,7 +108,7 @@ Future<void> _evaluateAlarms() async {
           id: '${alarm.id}_now'.hashCode,
           title: 'Alarm: ${alarm.title}',
           body:
-              '${alarm.weatherCondition} is now occurring in ${alarm.location.name}',
+              '$conditionsText is now occurring in ${alarm.location.name}',
         );
       }
 
@@ -141,20 +145,41 @@ DateTime? _findLastMatchingTime(Alarm alarm, WeatherForecast forecast) {
   return last;
 }
 
+bool _isNewDay(DateTime lastTriggered) {
+  final now = DateTime.now();
+  return now.year != lastTriggered.year ||
+      now.month != lastTriggered.month ||
+      now.day != lastTriggered.day;
+}
+
 bool _matchesAlarm(Alarm alarm, HourlyWeather hour) {
-  // Check temperature
-  if (alarm.temperature != null) {
-    if (alarm.weatherCondition == 'sunny' || alarm.weatherCondition == 'cloudy') {
-      // For these conditions we assume the user wants temp >= threshold
-      if (hour.temperature < alarm.temperature!) return false;
-    } else {
-      if (hour.temperature > alarm.temperature!) return false;
+  // 1. Weather condition: ANY of the selected conditions must match
+  final code = hour.weatherCode;
+  bool conditionMatches = false;
+  for (final condition in alarm.weatherConditions) {
+    if (_conditionMatches(code, condition, hour)) {
+      conditionMatches = true;
+      break;
     }
   }
+  if (!conditionMatches) return false;
 
-  // Check weather condition (simplified mapping)
-  final code = hour.weatherCode;
-  switch (alarm.weatherCondition) {
+  // 2. Temperature: if set, must be >= threshold
+  if (alarm.temperature != null && hour.temperature < alarm.temperature!) {
+    return false;
+  }
+
+  // 3. Wind speed: if set, must be >= threshold
+  if (alarm.windSpeed != null && hour.windSpeed < alarm.windSpeed!) {
+    return false;
+  }
+
+  // All specified conditions passed
+  return true;
+}
+
+bool _conditionMatches(int code, String condition, HourlyWeather hour) {
+  switch (condition) {
     case 'sunny':
       return code == 0 || code == 1;
     case 'partlyCloudy':
@@ -174,7 +199,7 @@ bool _matchesAlarm(Alarm alarm, HourlyWeather hour) {
     case 'hail':
       return code == 96 || code == 99;
     case 'windy':
-      return hour.windSpeed > 20; // arbitrary windy threshold
+      return hour.windSpeed > 20;
     default:
       return false;
   }

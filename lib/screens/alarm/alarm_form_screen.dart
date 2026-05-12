@@ -23,10 +23,11 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
   final _tempController = TextEditingController();
+  final _windController = TextEditingController();
   final _noticeController = TextEditingController(text: '2');
 
   AppLocation? _selectedLocation;
-  String? _selectedWeatherCondition;
+  final Set<String> _selectedWeatherConditions = {};
 
   final List<String> _weatherConditions = [
     'sunny',
@@ -48,13 +49,15 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
       _titleController.text = widget.alarm!.title;
       _descController.text = widget.alarm!.description;
       _selectedLocation = widget.alarm!.location;
-      _selectedWeatherCondition = widget.alarm!.weatherCondition;
+      _selectedWeatherConditions.addAll(widget.alarm!.weatherConditions);
       if (widget.alarm!.temperature != null) {
         _tempController.text = widget.alarm!.temperature!.toStringAsFixed(0);
       }
+      if (widget.alarm!.windSpeed != null) {
+        _windController.text = widget.alarm!.windSpeed!.toStringAsFixed(0);
+      }
       _noticeController.text = widget.alarm!.noticePeriodHours.toString();
     } else if (widget.area != null) {
-      // Pre-fill from area
       final centroid = widget.area!.centroid;
       _selectedLocation = AppLocation(
         name: widget.area!.name,
@@ -73,7 +76,7 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
       );
       return;
     }
-    if (_selectedWeatherCondition == null) {
+    if (_selectedWeatherConditions.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.pickWeatherCondition)),
       );
@@ -85,9 +88,12 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
       title: _titleController.text.isNotEmpty ? _titleController.text : l10n.alarm,
       description: _descController.text,
       location: _selectedLocation!,
-      weatherCondition: _selectedWeatherCondition!,
+      weatherConditions: _selectedWeatherConditions.toList(),
       temperature: _tempController.text.isNotEmpty
           ? double.tryParse(_tempController.text)
+          : null,
+      windSpeed: _windController.text.isNotEmpty
+          ? double.tryParse(_windController.text)
           : null,
       noticePeriodHours: int.tryParse(_noticeController.text) ?? 2,
       enabled: widget.alarm?.enabled ?? true,
@@ -144,27 +150,44 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
               ),
             ),
           const SizedBox(height: 16),
-          InputDecorator(
-            decoration: InputDecoration(labelText: l10n.pickWeatherCondition),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: _selectedWeatherCondition,
-                isDense: true,
-                isExpanded: true,
-                items: _weatherConditions.map((condition) {
-                  return DropdownMenuItem(
-                    value: condition,
-                    child: Text(_localizedCondition(l10n, condition)),
-                  );
-                }).toList(),
-                onChanged: (value) => setState(() => _selectedWeatherCondition = value),
-              ),
-            ),
+          Text(l10n.pickWeatherCondition, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _weatherConditions.map((condition) {
+              final isSelected = _selectedWeatherConditions.contains(condition);
+              return FilterChip(
+                label: Text(_localizedCondition(l10n, condition)),
+                selected: isSelected,
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedWeatherConditions.add(condition);
+                    } else {
+                      _selectedWeatherConditions.remove(condition);
+                    }
+                  });
+                },
+              );
+            }).toList(),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _tempController,
-            decoration: InputDecoration(labelText: '${l10n.temperature} (${l10n.celsius})'),
+            decoration: InputDecoration(
+              labelText: '${l10n.temperature} (${l10n.celsius})',
+              hintText: '≥',
+            ),
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _windController,
+            decoration: InputDecoration(
+              labelText: '${l10n.windSpeed} (${l10n.kmH})',
+              hintText: '≥',
+            ),
             keyboardType: TextInputType.number,
           ),
           const SizedBox(height: 16),

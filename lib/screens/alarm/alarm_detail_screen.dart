@@ -17,12 +17,7 @@ class AlarmDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final (_, conditionText) = WeatherConditionHelper.getWeatherInfo(
-      context,
-      _weatherCodeFromCondition(alarm.weatherCondition),
-    );
-
-    final bool isCustomArea = alarm.areaId != null;
+    final isCustomArea = alarm.areaId != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,14 +64,34 @@ class AlarmDetailScreen extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.cloud),
-            title: Text(l10n.weatherCondition),
-            subtitle: Text(conditionText),
+            title: Text(l10n.condition),
+            subtitle: Wrap(
+              spacing: 6,
+              children: alarm.weatherConditions.map((c) {
+                final (_, text) = WeatherConditionHelper.getWeatherInfo(
+                  context,
+                  _weatherCodeFromCondition(c),
+                );
+                return Chip(
+                  label: Text(text),
+                  padding: EdgeInsets.zero,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  visualDensity: VisualDensity.compact,
+                );
+              }).toList(),
+            ),
           ),
           if (alarm.temperature != null)
             ListTile(
               leading: const Icon(Icons.thermostat),
               title: Text(l10n.temperature),
-              subtitle: Text('${alarm.temperature!.round()}${l10n.celsius}'),
+              subtitle: Text('≥ ${alarm.temperature!.round()}${l10n.celsius}'),
+            ),
+          if (alarm.windSpeed != null)
+            ListTile(
+              leading: const Icon(Icons.air),
+              title: Text(l10n.windSpeed),
+              subtitle: Text('≥ ${alarm.windSpeed!.round()} ${l10n.kmH}'),
             ),
           ListTile(
             leading: const Icon(Icons.timer),
