@@ -50,9 +50,15 @@ class UpdateService {
       );
       final response = await http.get(
         uri,
-        headers: {'Accept': 'application/vnd.github+json'},
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'User-Agent': 'dont_let_my_plants_die/$_currentVersion',
+        },
       );
-      if (response.statusCode != 200) return null;
+      if (response.statusCode != 200) {
+        debugPrint('GitHub API error: ${response.statusCode} ${response.body}');
+        return null;
+      }
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final tagName = data['tag_name'] as String?;
@@ -69,7 +75,9 @@ class UpdateService {
         version: tagName.replaceFirst('v', ''),
         downloadUrl: downloadUrl ?? 'https://github.com/$_owner/$_repo/releases/latest',
       );
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('Update check error: $e');
+      debugPrint('$stack');
       return null;
     }
   }
