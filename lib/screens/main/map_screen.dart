@@ -12,9 +12,12 @@ import '../../services/cache_service.dart';
 import '../../services/open_meteo_service.dart';
 import '../../widgets/horizontal_calendar.dart';
 import '../../widgets/hourly_weather_list.dart';
+import '../alarm/alarm_form_screen.dart';
 
 class MapScreen extends ConsumerStatefulWidget {
-  const MapScreen({super.key});
+  final MapArea? initialArea;
+
+  const MapScreen({super.key, this.initialArea});
 
   @override
   ConsumerState<MapScreen> createState() => _MapScreenState();
@@ -34,6 +37,11 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   void initState() {
     super.initState();
     _loadSavedAreas();
+    if (widget.initialArea != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _loadArea(widget.initialArea!);
+      });
+    }
   }
 
   Future<void> _loadSavedAreas() async {
@@ -74,10 +82,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
       _isDrawingMode = false;
     });
     _fetchAreaWeather();
-  }
-
-  void _resetNorth() {
-    _mapController.rotate(0);
   }
 
   void _clearDrawing() {
@@ -193,15 +197,26 @@ class _MapScreenState extends ConsumerState<MapScreen> {
     _mapController.move(area.centroid, 6);
   }
 
+  void _openAlarmForm() {
+    if (_currentArea == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AlarmFormScreen(area: _currentArea),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final metric = ref.watch(weatherMetricProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.map),
         actions: [
-          if (_points.isNotEmpty)
+          if (_points.isNotEmpty && widget.initialArea == null)
             IconButton(
               icon: const Icon(Icons.clear),
               tooltip: l10n.cancel,
@@ -305,13 +320,6 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      FloatingActionButton.small(
-                        heroTag: 'north',
-                        onPressed: _resetNorth,
-                        tooltip: 'Reset to North',
-                        child: const Icon(Icons.explore),
-                      ),
-                      const SizedBox(height: 8),
                       if (!_isDrawingMode && !_isClosed)
                         FloatingActionButton.small(
                           heroTag: 'draw',
@@ -386,6 +394,14 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                       label: Text(l10n.save),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _currentArea != null ? _openAlarmForm : null,
+                      icon: const Icon(Icons.add_alarm),
+                      label: Text(l10n.newAlarm),
+                    ),
+                  ),
                   if (_currentArea != null) ...[
                     const SizedBox(width: 8),
                     Expanded(
@@ -431,6 +447,32 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                 children: [
                   HorizontalCalendar(days: _areaWeather!.days),
                   const Divider(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: SegmentedButton<WeatherMetric>(
+                      segments: [
+                        ButtonSegment(
+                          value: WeatherMetric.temperature,
+                          label: Text(l10n.temperature),
+                          icon: const Icon(Icons.thermostat),
+                        ),
+                        ButtonSegment(
+                          value: WeatherMetric.wind,
+                          label: Text(l10n.wind),
+                          icon: const Icon(Icons.air),
+                        ),
+                        ButtonSegment(
+                          value: WeatherMetric.humidity,
+                          label: Text(l10n.humidity),
+                          icon: const Icon(Icons.water_drop),
+                        ),
+                      ],
+                      selected: {metric},
+                      onSelectionChanged: (Set<WeatherMetric> newSelection) {
+                        ref.read(weatherMetricProvider.notifier).state = newSelection.first;
+                      },
+                    ),
+                  ),
                   Expanded(
                     child: ListView(
                       children: [

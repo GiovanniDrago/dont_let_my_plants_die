@@ -5,13 +5,15 @@ import 'package:uuid/uuid.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/alarm.dart';
 import '../../models/location.dart';
+import '../../models/map_area.dart';
 import '../../providers/alarm_provider.dart';
 import '../../widgets/location_search_field.dart';
 
 class AlarmFormScreen extends ConsumerStatefulWidget {
   final Alarm? alarm;
+  final MapArea? area;
 
-  const AlarmFormScreen({super.key, this.alarm});
+  const AlarmFormScreen({super.key, this.alarm, this.area});
 
   @override
   ConsumerState<AlarmFormScreen> createState() => _AlarmFormScreenState();
@@ -51,6 +53,15 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
         _tempController.text = widget.alarm!.temperature!.toStringAsFixed(0);
       }
       _noticeController.text = widget.alarm!.noticePeriodHours.toString();
+    } else if (widget.area != null) {
+      // Pre-fill from area
+      final centroid = widget.area!.centroid;
+      _selectedLocation = AppLocation(
+        name: widget.area!.name,
+        latitude: centroid.latitude,
+        longitude: centroid.longitude,
+        country: 'Custom area',
+      );
     }
   }
 
@@ -80,6 +91,7 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
           : null,
       noticePeriodHours: int.tryParse(_noticeController.text) ?? 2,
       enabled: widget.alarm?.enabled ?? true,
+      areaId: widget.alarm?.areaId ?? widget.area?.id,
     );
 
     if (widget.alarm != null) {
@@ -113,10 +125,17 @@ class _AlarmFormScreenState extends ConsumerState<AlarmFormScreen> {
             maxLines: 3,
           ),
           const SizedBox(height: 16),
-          LocationSearchField(
-            onLocationSelected: (loc) => setState(() => _selectedLocation = loc),
-          ),
-          if (_selectedLocation != null)
+          if (widget.area != null)
+            Chip(
+              avatar: const Icon(Icons.map),
+              label: Text('${l10n.area}: ${widget.area!.name}'),
+              onDeleted: null,
+            )
+          else
+            LocationSearchField(
+              onLocationSelected: (loc) => setState(() => _selectedLocation = loc),
+            ),
+          if (_selectedLocation != null && widget.area == null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Chip(

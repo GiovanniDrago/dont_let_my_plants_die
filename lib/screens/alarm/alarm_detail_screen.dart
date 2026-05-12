@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/alarm.dart';
 import '../../providers/alarm_provider.dart';
+import '../../services/cache_service.dart';
 import '../../widgets/weather_condition_icon.dart';
+import '../main/map_screen.dart';
 import 'alarm_form_screen.dart';
 
 class AlarmDetailScreen extends ConsumerWidget {
@@ -19,6 +21,8 @@ class AlarmDetailScreen extends ConsumerWidget {
       context,
       _weatherCodeFromCondition(alarm.weatherCondition),
     );
+
+    final bool isCustomArea = alarm.areaId != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -49,6 +53,19 @@ class AlarmDetailScreen extends ConsumerWidget {
             leading: const Icon(Icons.location_on),
             title: Text(l10n.location),
             subtitle: Text(alarm.location.displayName),
+            trailing: isCustomArea ? const Icon(Icons.map) : null,
+            onTap: isCustomArea
+                ? () async {
+                    final areas = await CacheService.getSavedAreas();
+                    final area = areas.where((a) => a.id == alarm.areaId).firstOrNull;
+                    if (area != null && context.mounted) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => MapScreen(initialArea: area)),
+                      );
+                    }
+                  }
+                : null,
           ),
           ListTile(
             leading: const Icon(Icons.cloud),

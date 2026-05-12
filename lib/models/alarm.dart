@@ -11,6 +11,7 @@ class Alarm {
   final bool enabled;
   final DateTime? lastTriggeredAt;
   final DateTime? lastResetAt;
+  final String? areaId; // links to a saved MapArea if alarm was created from an area
 
   Alarm({
     required this.id,
@@ -23,6 +24,7 @@ class Alarm {
     this.enabled = true,
     this.lastTriggeredAt,
     this.lastResetAt,
+    this.areaId,
   });
 
   factory Alarm.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class Alarm {
       lastResetAt: json['lastResetAt'] != null
           ? DateTime.parse(json['lastResetAt'] as String)
           : null,
+      areaId: json['areaId'] as String?,
     );
   }
 
@@ -56,6 +59,7 @@ class Alarm {
       'enabled': enabled,
       'lastTriggeredAt': lastTriggeredAt?.toIso8601String(),
       'lastResetAt': lastResetAt?.toIso8601String(),
+      'areaId': areaId,
     };
   }
 
@@ -73,6 +77,8 @@ class Alarm {
     bool? clearLastTriggeredAt,
     DateTime? lastResetAt,
     bool? clearLastResetAt,
+    String? areaId,
+    bool? clearAreaId,
   }) {
     return Alarm(
       id: id ?? this.id,
@@ -87,6 +93,7 @@ class Alarm {
           ? null
           : (lastTriggeredAt ?? this.lastTriggeredAt),
       lastResetAt: clearLastResetAt == true ? null : (lastResetAt ?? this.lastResetAt),
+      areaId: clearAreaId == true ? null : (areaId ?? this.areaId),
     );
   }
 }
