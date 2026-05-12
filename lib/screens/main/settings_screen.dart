@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 
 import '../../providers/locale_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../services/update_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -156,6 +157,12 @@ class SettingsScreen extends ConsumerWidget {
                 ref.read(localeProvider.notifier).setLocale(newSelection.first);
               },
             ),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.system_update),
+            title: Text(l10n.checkForUpdates),
+            onTap: () => UpdateService.check(context, silent: false),
           ),
           const Divider(),
           ListTile(

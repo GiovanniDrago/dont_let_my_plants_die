@@ -142,6 +142,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get italian => 'Italian';
 
   @override
+  String get checkForUpdates => 'Check for updates';
+
+  @override
+  String get updateAvailable => 'Update available';
+
+  @override
+  String get noUpdates => 'No updates available';
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get updateError => 'Could not check for updates';
+
+  @override
   String get resetAlarmAfter => 'Reset alarm after';
 
   @override

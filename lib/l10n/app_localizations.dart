@@ -362,6 +362,42 @@ abstract class AppLocalizations {
   /// **'Italian'**
   String get italian;
 
+  /// Check for updates button
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates'**
+  String get checkForUpdates;
+
+  /// Update available dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Update available'**
+  String get updateAvailable;
+
+  /// No updates message
+  ///
+  /// In en, this message translates to:
+  /// **'No updates available'**
+  String get noUpdates;
+
+  /// Download button
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// Later button
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// Update check error message
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check for updates'**
+  String get updateError;
+
   /// Reset alarm after label
   ///
   /// In en, this message translates to:

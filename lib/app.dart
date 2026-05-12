@@ -9,6 +9,7 @@ import 'providers/theme_provider.dart';
 import 'screens/main/main_screen.dart';
 import 'screens/onboarding/location_setup_screen.dart';
 import 'services/cache_service.dart';
+import 'services/update_service.dart';
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -53,9 +54,30 @@ class MyApp extends ConsumerWidget {
           if (!hasLocation) {
             return const LocationSetupScreen();
           }
-          return const MainScreen();
+          return const _AppStartupWrapper(child: MainScreen());
         },
       ),
     );
   }
+}
+
+class _AppStartupWrapper extends StatefulWidget {
+  final Widget child;
+  const _AppStartupWrapper({required this.child});
+
+  @override
+  State<_AppStartupWrapper> createState() => _AppStartupWrapperState();
+}
+
+class _AppStartupWrapperState extends State<_AppStartupWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UpdateService.check(context, silent: true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
