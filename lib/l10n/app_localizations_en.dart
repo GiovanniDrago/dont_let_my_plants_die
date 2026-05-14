@@ -254,4 +254,35 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get version => 'Version';
+
+  @override
+  String get windGusts => 'Wind gusts';
+
+  @override
+  String get precipitation => 'Precipitation';
+
+  @override
+  String get precipitationProbability => 'Rain probability';
+
+  @override
+  String get cloudCover => 'Cloud cover';
+
+  @override
+  String get uvIndex => 'UV index';
+
+  @override
+  String get tempMin => 'Min';
+
+  @override
+  String get tempMax => 'Max';
+
+  @override
+  String get elevation => 'Elevation';
+
+  @override
+  String get rainProbabilityInfoTitle => 'About rain probability';
+
+  @override
+  String get rainProbabilityInfoBody =>
+      'The precipitation amount comes from a high-resolution weather model, while the probability is calculated from 30 ensemble simulations. These models can sometimes disagree, which is why you may see rain with 0% probability or dry conditions with high probability.';
 }

@@ -48,6 +48,10 @@ class CacheService {
     if (data == null) return null;
     try {
       final json = jsonDecode(data) as Map<String, dynamic>;
+      // Invalidate old cache format (version < 2)
+      if (json['_cacheVersion'] != 2) {
+        return null;
+      }
       return WeatherForecast.fromResponse(json);
     } catch (_) {
       return null;

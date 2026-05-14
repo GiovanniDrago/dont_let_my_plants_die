@@ -255,4 +255,35 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get version => 'Versione';
+
+  @override
+  String get windGusts => 'Raffiche';
+
+  @override
+  String get precipitation => 'Precipitazioni';
+
+  @override
+  String get precipitationProbability => 'Probabilità pioggia';
+
+  @override
+  String get cloudCover => 'Nuvolosità';
+
+  @override
+  String get uvIndex => 'Indice UV';
+
+  @override
+  String get tempMin => 'Min';
+
+  @override
+  String get tempMax => 'Max';
+
+  @override
+  String get elevation => 'Altitudine';
+
+  @override
+  String get rainProbabilityInfoTitle => 'Sulla probabilità di pioggia';
+
+  @override
+  String get rainProbabilityInfoBody =>
+      'La quantità di precipitazioni proviene da un modello meteorologico ad alta risoluzione, mentre la probabilità è calcolata da 30 simulazioni ensemble. Questi modelli possono talvolta essere in disaccordo, per cui potresti vedere pioggia con probabilità 0% o tempo asciutto con alta probabilità.';
 }

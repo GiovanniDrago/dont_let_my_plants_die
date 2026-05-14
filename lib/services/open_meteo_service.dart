@@ -48,7 +48,8 @@ class OpenMeteoService {
 
     final uri = Uri.parse(
       '$_forecastBase/forecast?latitude=$latitude&longitude=$longitude'
-      '&hourly=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m'
+      '&hourly=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_gusts_10m,precipitation,precipitation_probability,cloudcover,uv_index'
+      '&daily=temperature_2m_max,temperature_2m_min'
       '&forecast_days=$days&timezone=auto',
     );
 

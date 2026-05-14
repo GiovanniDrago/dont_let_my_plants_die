@@ -589,6 +589,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Version'**
   String get version;
+
+  /// Wind gusts label
+  ///
+  /// In en, this message translates to:
+  /// **'Wind gusts'**
+  String get windGusts;
+
+  /// Precipitation label
+  ///
+  /// In en, this message translates to:
+  /// **'Precipitation'**
+  String get precipitation;
+
+  /// Precipitation probability label
+  ///
+  /// In en, this message translates to:
+  /// **'Rain probability'**
+  String get precipitationProbability;
+
+  /// Cloud cover label
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud cover'**
+  String get cloudCover;
+
+  /// UV index label
+  ///
+  /// In en, this message translates to:
+  /// **'UV index'**
+  String get uvIndex;
+
+  /// Minimum temperature label
+  ///
+  /// In en, this message translates to:
+  /// **'Min'**
+  String get tempMin;
+
+  /// Maximum temperature label
+  ///
+  /// In en, this message translates to:
+  /// **'Max'**
+  String get tempMax;
+
+  /// Elevation label
+  ///
+  /// In en, this message translates to:
+  /// **'Elevation'**
+  String get elevation;
+
+  /// Rain probability info dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'About rain probability'**
+  String get rainProbabilityInfoTitle;
+
+  /// Rain probability info dialog body
+  ///
+  /// In en, this message translates to:
+  /// **'The precipitation amount comes from a high-resolution weather model, while the probability is calculated from 30 ensemble simulations. These models can sometimes disagree, which is why you may see rain with 0% probability or dry conditions with high probability.'**
+  String get rainProbabilityInfoBody;
 }
 
 class _AppLocalizationsDelegate

@@ -32,16 +32,24 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   WeatherForecast? _areaWeather;
   List<MapArea> _savedAreas = [];
   MapArea? _currentArea;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     _loadSavedAreas();
     if (widget.initialArea != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _loadArea(widget.initialArea!);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSavedAreas() async {
@@ -211,6 +219,17 @@ class _MapScreenState extends ConsumerState<MapScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final metric = ref.watch(weatherMetricProvider);
+
+    ref.listen<int>(selectedDayIndexProvider, (previous, next) {
+      if (_pageController.hasClients &&
+          _pageController.page?.round() != next) {
+        _pageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(
@@ -474,24 +493,53 @@ class _MapScreenState extends ConsumerState<MapScreen> {
                     ),
                   ),
                   Expanded(
-                    child: ListView(
-                      children: [
-                        Consumer(builder: (context, ref, _) {
-                          final selectedDayIndex = ref.watch(selectedDayIndexProvider);
-                          final selectedDay = _areaWeather!.days[
-                              selectedDayIndex.clamp(0, _areaWeather!.days.length - 1)];
-                          final now = DateTime.now();
-                          final isToday = selectedDay.date.year == now.year &&
-                              selectedDay.date.month == now.month &&
-                              selectedDay.date.day == now.day;
-                          final hourly = isToday
-                              ? selectedDay.hourly
-                                  .where((h) => h.time.isAfter(now.subtract(const Duration(minutes: 1))))
-                                  .toList()
-                              : selectedDay.hourly;
-                          return HourlyWeatherList(hourly: hourly);
-                        }),
-                      ],
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _areaWeather!.days.length,
+                      onPageChanged: (index) {
+                        ref.read(selectedDayIndexProvider.notifier).state = index;
+                      },
+                      itemBuilder: (context, dayIndex) {
+                        final selectedDay = _areaWeather!.days[dayIndex];
+                        final now = DateTime.now();
+                        final isToday = selectedDay.date.year == now.year &&
+                            selectedDay.date.month == now.month &&
+                            selectedDay.date.day == now.day;
+                        final hourly = isToday
+                            ? selectedDay.hourly
+                                .where((h) => h.time.isAfter(now.subtract(const Duration(minutes: 1))))
+                                .toList()
+                            : selectedDay.hourly;
+                        return ListView(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    isToday ? l10n.today : '${selectedDay.date.day}/${selectedDay.date.month}',
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  const Spacer(),
+                                  if (selectedDay.minTemperature != null && selectedDay.maxTemperature != null)
+                                    Text(
+                                      '${l10n.tempMin}: ${selectedDay.minTemperature!.round()}${l10n.celsius}  ${l10n.tempMax}: ${selectedDay.maxTemperature!.round()}${l10n.celsius}',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            HourlyWeatherList(
+                              hourly: hourly,
+                              daily: selectedDay,
+                              elevation: _areaWeather!.elevation,
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ],
