@@ -252,4 +252,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get percent => '%';
+
+  @override
+  String get version => 'Versione';
 }

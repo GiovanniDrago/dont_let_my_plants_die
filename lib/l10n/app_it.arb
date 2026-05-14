@@ -79,5 +79,6 @@
   "deleteAreaConfirm": "Eliminare quest'area?",
   "deleteAlarmConfirm": "Eliminare questo allarme?",
   "kmH": "km/h",
-  "percent": "%"
+  "percent": "%",
+  "version": "Versione"
 }

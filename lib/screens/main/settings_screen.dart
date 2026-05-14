@@ -160,15 +160,27 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(),
           ListTile(
+            title: Text(l10n.resetAlarmAfter),
+            subtitle: const Text('2 h'),
+            leading: const Icon(Icons.timer_outlined),
+          ),
+          const Divider(),
+          ListTile(
             leading: const Icon(Icons.system_update),
             title: Text(l10n.checkForUpdates),
             onTap: () => UpdateService.check(context, silent: false),
           ),
           const Divider(),
-          ListTile(
-            title: Text(l10n.resetAlarmAfter),
-            subtitle: const Text('2 h'),
-            leading: const Icon(Icons.timer_outlined),
+          FutureBuilder<String>(
+            future: UpdateService.currentVersion,
+            builder: (context, snapshot) {
+              final version = snapshot.data ?? '';
+              return ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: Text(l10n.version),
+                subtitle: version.isNotEmpty ? Text('v$version') : null,
+              );
+            },
           ),
         ],
       ),

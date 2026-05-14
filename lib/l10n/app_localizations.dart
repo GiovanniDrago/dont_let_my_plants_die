@@ -583,6 +583,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'%'**
   String get percent;
+
+  /// Installed app version label
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
 }
 
 class _AppLocalizationsDelegate

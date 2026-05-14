@@ -162,5 +162,7 @@
   "kmH": "km/h",
   "@kmH": {"description": "Kilometers per hour"},
   "percent": "%",
-  "@percent": {"description": "Percent symbol"}
+  "@percent": {"description": "Percent symbol"},
+  "version": "Version",
+  "@version": {"description": "Installed app version label"}
 }

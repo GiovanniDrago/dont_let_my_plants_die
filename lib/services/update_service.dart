@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
@@ -10,7 +11,18 @@ class UpdateService {
   static const String _owner = 'GiovanniDrago';
   static const String _repo = 'dont_let_my_plants_die';
   static const String _lastCheckKey = 'last_update_check';
-  static const String _currentVersion = '0.0.0';
+
+  static String? _cachedVersion;
+
+  static Future<String> _getCurrentVersion() async {
+    if (_cachedVersion != null) return _cachedVersion!;
+    final packageInfo = await PackageInfo.fromPlatform();
+    _cachedVersion = packageInfo.version;
+    return _cachedVersion!;
+  }
+
+  /// Exposes the installed app version read from platform metadata.
+  static Future<String> get currentVersion async => _getCurrentVersion();
 
   static Future<void> check(BuildContext context, {bool silent = true}) async {
     final box = CacheService.settingsBox;
@@ -20,10 +32,11 @@ class UpdateService {
     if (silent && lastCheck == today) return;
 
     final latest = await _fetchLatestRelease();
+    final currentVersion = await _getCurrentVersion();
 
     if (!silent) {
       await box.put(_lastCheckKey, today);
-    } else if (latest != null && _isNewer(latest.version, _currentVersion)) {
+    } else if (latest != null && _isNewer(latest.version, currentVersion)) {
       await box.put(_lastCheckKey, today);
     }
 
@@ -34,7 +47,7 @@ class UpdateService {
       return;
     }
 
-    if (_isNewer(latest.version, _currentVersion)) {
+    if (_isNewer(latest.version, currentVersion)) {
       if (context.mounted) {
         _showUpdateDialog(context, latest);
       }
@@ -45,6 +58,7 @@ class UpdateService {
 
   static Future<_ReleaseInfo?> _fetchLatestRelease() async {
     try {
+      final currentVersion = await _getCurrentVersion();
       final uri = Uri.parse(
         'https://api.github.com/repos/$_owner/$_repo/releases/latest',
       );
@@ -52,7 +66,7 @@ class UpdateService {
         uri,
         headers: {
           'Accept': 'application/vnd.github+json',
-          'User-Agent': 'dont_let_my_plants_die/$_currentVersion',
+          'User-Agent': 'dont_let_my_plants_die/$currentVersion',
         },
       );
       if (response.statusCode != 200) {
